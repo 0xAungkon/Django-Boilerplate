@@ -1,0 +1,23 @@
+[project]
+name = "software-backend"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "django==5.2.1",
+    "django-cors-headers==4.7.0",
+    "django-filter==25.1",
+    "django-storages[boto3]>=1.14.6",
+    "djangorestframework==3.16.0",
+    "djangorestframework-simplejwt==5.5.0",
+    "drf-yasg==1.21.10",
+    "fpdf==1.7.2",
+    "ipython>=9.4.0",
+    "loguru>=0.7.3",
+    "pillow==11.2.1",
+    "psycopg2-binary>=2.9.10",
+    "python-docx==1.1.2",
+    "python-dotenv>=1.1.1",
+    "python-magic>=0.4.27",
+]

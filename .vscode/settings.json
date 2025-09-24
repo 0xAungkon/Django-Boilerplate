@@ -1,0 +1,13 @@
+{
+    "python.analysis.extraPaths": [
+        "./apps",
+        "./utils"
+    ],
+    "python.autoComplete.extraPaths": [
+        "./apps",
+        "./utils"
+    ],
+    "files.exclude": {
+        "**/__pycache__": true
+    }
+}

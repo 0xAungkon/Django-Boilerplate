@@ -1,0 +1,16 @@
+venv/
+*.pyc
+__pycache__
+.git
+.venv
+.pytest_cache
+media/
+staticfiles/
+
+.venv/
+*.pyc
+__pycache__
+.git
+.pytest_cache
+media/
+staticfiles/
