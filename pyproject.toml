@@ -1,23 +1,38 @@
 [project]
-name = "software-backend"
+name = "easyssh"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "annotated-types==0.7.0",
+    "asgiref==3.8.1",
     "django==5.2.1",
     "django-cors-headers==4.7.0",
     "django-filter==25.1",
+    "django-ninja==1.4.1",
     "django-storages[boto3]>=1.14.6",
     "djangorestframework==3.16.0",
     "djangorestframework-simplejwt==5.5.0",
     "drf-yasg==1.21.10",
     "fpdf==1.7.2",
-    "ipython>=9.4.0",
-    "loguru>=0.7.3",
+    "inflection==0.5.1",
+    "loguru==0.7.3",
+    "lxml==5.4.0",
+    "packaging==25.0",
     "pillow==11.2.1",
-    "psycopg2-binary>=2.9.10",
+    "psycopg2-binary==2.9.10",
+    "pydantic==2.11.4",
+    "pydantic-core==2.33.2",
+    "pyjwt==2.9.0",
     "python-docx==1.1.2",
-    "python-dotenv>=1.1.1",
-    "python-magic>=0.4.27",
+    "python-dotenv==1.1.0",
+    "python-magic==0.4.27",
+    "pytz==2025.2",
+    "pyyaml==6.0.2",
+    "rest-framework-simplejwt==0.0.2",
+    "sqlparse==0.5.3",
+    "typing-extensions==4.13.2",
+    "typing-inspection==0.4.0",
+    "uritemplate==4.1.1",
 ]
