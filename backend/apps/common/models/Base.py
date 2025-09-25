@@ -17,3 +17,6 @@ class BlankModel(models.Model):
     """
     A blank model that can be used as a placeholder or for testing purposes.
     """
+    
+    class Meta:
+        abstract = True

@@ -14,6 +14,7 @@ class ProfileModel(models.Model):
         return self.user.username
 
     class Meta:
+        app_label = 'common'
         verbose_name = "Profile Extra Info"
         verbose_name_plural = "Profile Extra Infos"
 

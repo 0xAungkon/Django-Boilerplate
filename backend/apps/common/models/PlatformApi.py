@@ -22,9 +22,16 @@ class APITokenModel(BaseModel):
     token = models.CharField(
         max_length=255, unique=True, default=generate_token, db_index=True
     )
+    policy = models.JSONField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
 
     def is_valid(self):
         if self.is_deleted:
             return False
 
         return True
+
+    class Meta:
+        app_label = 'common'
+        verbose_name = "Platform API Token"
+        verbose_name_plural = "Platform API Tokens"
