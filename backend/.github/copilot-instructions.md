@@ -25,6 +25,7 @@ This Django REST API backend uses a custom directory structure with:
 ### Models & Database
 - All models inherit from `BaseModel` (timestamps + soft delete)
 - User profile with Django signals for auto-creation
+- EasySSH models: Workspace, Vault, SSHCreds, SSHServers , PlatformAPI .
 - PostgreSQL (production) / SQLite (development)
 
 ## Development Commands
@@ -32,8 +33,13 @@ This Django REST API backend uses a custom directory structure with:
 ### AI Development (Use these in automated tasks)
 ```bash
 # Virtual environment setup
-python3 -m venv .venv                    # Create virtual environment
-source .venv/bin/activate                # Activate virtual environment
+uv venv .venv                           # Create virtual environment with UV
+source .venv/bin/activate               # Activate virtual environment
+uv sync                                 # Install dependencies from uv.lock
+
+# Package management
+uv add <package_name>                   # Add new package
+uv remove <package_name>                # Remove package
 
 # Application management
 python3 ./manage.py runserver 0.0.0.0:8000  # Start development server
@@ -66,7 +72,7 @@ make clean        # Removes cache files
 ```python
 # Utils are in sys.path
 from utils.Microfunctions import is_valid_email
-from apps.common.models import APITokenModel
+from common.models import APITokenModel
 ```
 
 ### Middleware Stack
@@ -79,6 +85,40 @@ from apps.common.models import APITokenModel
 - Custom messages: 401 (Authentication required), 403 (Authorization required), 404 (Resource not found)
 - Loguru logging integration
 
+## EasySSH Models & Relationships
+
+### Core Models
+- **WorkspaceModel**: User organization unit for grouping environments
+- **VaultModel**: Device/environment containers within workspaces
+- **SSHCredsModel**: SSH key pair management for authentication
+- **SSHServersModel**: SSH server configurations with vault associations
+- **APITokenModel**: Enhanced platform API tokens with policy support
+
+### Model Relationships
+```
+User (Django built-in)
+├── WorkspaceModel (1:N) - User can have multiple workspaces
+├── VaultModel (1:N) - User can have multiple vaults  
+├── SSHCredsModel (1:N) - User can have multiple SSH credentials
+├── SSHServersModel (1:N) - User can have multiple SSH servers
+└── APITokenModel (1:N) - User can have multiple API tokens
+
+WorkspaceModel
+└── VaultModel (1:N) - Workspace can contain multiple vaults
+
+VaultModel  
+└── SSHServersModel (1:N) - Vault can contain multiple SSH servers
+
+SSHCredsModel
+└── SSHServersModel (1:N) - Credentials can be used by multiple servers
+```
+
+### Field Highlights
+- **UUID Primary Keys**: All models use UUID for primary keys
+- **JSON Fields**: Metadata (VaultModel), Policy (APITokenModel)
+- **Soft Delete**: All models inherit BaseModel soft delete functionality
+- **Timestamps**: Automatic created_at, updated_at, deleted_at tracking
+
 ## Project Structure Overview
 
 ```
@@ -90,8 +130,12 @@ from apps.common.models import APITokenModel
 ├── apps/                            # Django applications directory (added to sys.path)
 │   └── common/                      # Main business logic application
 │       ├── admin/                   # Django admin customizations
-│       │   ├── PlatformAPI.py       # Admin interface for platform API tokens
+│       │   ├── PlatformAPI.py       # Admin interface for platform API tokens (enhanced with policy)
 │       │   ├── Profile.py           # Admin interface for user profiles
+│       │   ├── Workspace.py         # Admin interface for workspaces
+│       │   ├── Vault.py             # Admin interface for vaults
+│       │   ├── SSHCreds.py          # Admin interface for SSH credentials
+│       │   ├── SSHServers.py        # Admin interface for SSH servers
 │       │   └── __init__.py          # Admin module initialization
 │       ├── controllers/             # Controller-based architecture (replaces views)
 │       │   ├── Authentication/      # Authentication-related controllers
@@ -106,8 +150,12 @@ from apps.common.models import APITokenModel
 │       │   └── __init__.py          # Migration module initialization
 │       ├── models/                  # Django models
 │       │   ├── Base.py              # BaseModel with timestamps and soft delete
-│       │   ├── PlatformApi.py       # Platform API token model
+│       │   ├── PlatformApi.py       # Platform API token model (enhanced with policy & is_active)
 │       │   ├── Profile.py           # User profile model with signals
+│       │   ├── Workspace.py         # Workspace model for user organization
+│       │   ├── Vault.py             # Vault model for device/environment management
+│       │   ├── SSHCreds.py          # SSH credentials model for key management
+│       │   ├── SSHServers.py        # SSH servers model with vault relationships
 │       │   └── __init__.py          # Model imports and initialization
 │       ├── routers/                 # Custom routing logic
 │       │   └── RouterEnvelop.py     # Secondary router for platform APIs
@@ -183,6 +231,8 @@ When working on this codebase:
 ### Models & Database
 - Inherit from `BaseModel` for timestamps and soft delete
 - User profiles auto-created via Django signals
+- EasySSH models with proper relationships: User → Workspace → Vault → SSH Components
+- Enhanced PlatformAPI with policy field and is_active status
 - Dual-router system: main + platform API routes
 
 ### Authentication & Security
