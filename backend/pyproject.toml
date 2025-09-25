@@ -11,7 +11,6 @@ dependencies = [
     "django-cors-headers==4.7.0",
     "django-filter==25.1",
     "django-ninja==1.4.1",
-    "django-storages[boto3]>=1.14.6",
     "djangorestframework==3.16.0",
     "djangorestframework-simplejwt==5.5.0",
     "drf-yasg==1.21.10",
