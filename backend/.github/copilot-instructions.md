@@ -2,110 +2,196 @@
 
 ## Project Architecture Overview
 
-This is a Django REST API backend with a custom directory structure that differs from standard Django patterns:
+This Django REST API backend uses a custom directory structure with:
 
-- **Core Configuration**: `core/` contains Django settings, main URLs, custom middleware, and authentication handlers
-- **Apps Structure**: All Django apps live under `apps/` directory (added to `sys.path` in settings)
-- **Utilities**: Shared utilities in `utils/` directory (also added to `sys.path`)
-- **Custom App Pattern**: The main business logic is in the `common` app under `apps/common/`
+- **Core Configuration**: `core/` - Django settings, URLs, middleware, and authentication
+- **Apps Structure**: `apps/` - All Django apps (added to `sys.path`)
+- **Utilities**: `utils/` - Shared utilities (added to `sys.path`)
+- **Virtual Environment**: `.venv/` - Python executable at `.venv/bin/python3`
 
 ## Key Development Patterns
 
 ### Controller-Based Architecture
-This project uses a controller pattern instead of standard Django views:
-- Controllers are organized in `apps/common/controllers/` by feature (Authentication, Common, PlatformApi)
-- Example: `LoginController.py` contains both serializer and APIView classes in one file
-- Controllers inherit from DRF's `APIView` and use `@swagger_auto_schema` for API documentation
-
-### Model Organization
-- Base models in `apps/common/models/Base.py` provide common fields (`BaseModel` with timestamps and soft delete)
-- Feature-specific models are separate files (e.g., `Profile.py`, `PlatformApi.py`)
-- Models use Django signals for automatic profile creation (`@receiver(post_save, sender=User)`)
-
-### Routing Pattern
-The project uses a dual-router system:
-- Main routes in `apps/common/urls.py` combine DefaultRouter with explicit path patterns
-- Secondary router in `apps/common/routers/RouterEnvelop.py` for platform API endpoints
-- URL pattern: `api/v1/` prefix for all endpoints
+- Controllers replace standard Django views in `apps/common/controllers/`
+- Organized by feature: Authentication, Common, PlatformApi
+- Each controller contains serializers and APIView classes
+- Use `@swagger_auto_schema` for API documentation
 
 ### Authentication System
-Implements multiple authentication methods simultaneously:
-1. **JWT Authentication**: Using `rest_framework_simplejwt` with very long token lifetime (99999 days)
-2. **Platform API Token**: Custom `X-API-KEY` header authentication via `PlatformApiTokenAuthentication`
+1. **JWT Authentication**: `rest_framework_simplejwt` with 99999-day token lifetime
+2. **Platform API Token**: Custom `X-API-KEY` header authentication
 3. **Session Authentication**: Standard Django session auth
 
-### Environment & Configuration
-- Uses `python-dotenv` for environment variables
-- Conditional database setup: PostgreSQL if `DATABASE_DRIVER=postgres`, otherwise SQLite
-- Swagger UI enabled when `SWAGGER_UI=true`
+### Models & Database
+- All models inherit from `BaseModel` (timestamps + soft delete)
+- User profile with Django signals for auto-creation
+- PostgreSQL (production) / SQLite (development)
 
-## Development Workflow
+## Development Commands
 
-### Running the Application
+### AI Development (Use these in automated tasks)
 ```bash
-make run          # Starts server on 0.0.0.0:8000 (or ENV vars HOST:PORT)
-make migrate      # Runs migrations for both Django and common app
+# Virtual environment setup
+python3 -m venv .venv                    # Create virtual environment
+source .venv/bin/activate                # Activate virtual environment
+
+# Application management
+python3 ./manage.py runserver 0.0.0.0:8000  # Start development server
+python3 ./manage.py migrate                  # Run Django migrations
+python3 ./manage.py migrate common           # Run app-specific migrations
+python3 ./manage.py shell                    # Django shell
+python3 ./manage.py test                     # Run tests
+python3 ./manage.py collectstatic --noinput # Collect static files
+
+# Code quality
+python3 -m black .                      # Auto-format code with black
+python3 -m autoflake --remove-all-unused-imports --in-place --recursive .  # Remove unused imports
+python3 -m flake8 . --ignore=E501 --per-file-ignores="*/__init__.py:F401,F403"  # Lint code
+```
+
+### Human Developer Commands (Reference only)
+```bash
+make run          # Starts server on 0.0.0.0:8000
+make migrate      # Runs migrations
 make shell        # Django shell
 make test         # Run tests
-```
-
-### Code Quality
-```bash
 make format       # Auto-formats with black and autoflake
-make lint         # Lints with flake8 (ignores E501, allows F401/F403 in __init__.py)
-make clean        # Removes __pycache__, .pyc files, and migration files
+make lint         # Lints with flake8
+make clean        # Removes cache files
 ```
 
-### Docker Development
-- Use `docker compose up -d --build --force-recreate` for clean rebuilds
-- Volumes mount to `/var/esign/` for persistence (logs, media, database)
-
-## Custom Middleware & Utilities
-
-### Middleware Stack (in order)
-1. `CsrfExemptMiddleware` - Disables CSRF for all requests
-2. `HandleErrorsMiddleware` - Converts errors to JSON responses
-3. Standard Django middleware stack
-
-### Utility Functions
-- `utils.Microfunctions.is_valid_email()` - Email validation with regex
-- Controllers can authenticate by email or username (see `LoginController.py`)
-
-## File Storage & Media
-- Local media storage in `media/` directory
-- Profile-related file uploads handled through Django's default file storage
-
-## API Documentation
-- Uses `drf-yasg` for Swagger/OpenAPI documentation
-- Custom schema generator: `core.schema.CustomSchemaGenerator`
-- Bearer token and X-API-KEY authentication in Swagger UI
-
-## Project-Specific Conventions
+## Key Conventions
 
 ### Import Patterns
 ```python
-# Controllers import from utils directly (utils/ in sys.path)
+# Utils are in sys.path
 from utils.Microfunctions import is_valid_email
-
-# Apps import with apps prefix
 from apps.common.models import APITokenModel
 ```
 
-### Error Handling
-- Middleware automatically converts Django errors to JSON
-- Custom error messages for 401 (Authentication required), 403 (Authorization required), 404 (Resource not found)
-- Detailed error logging with `loguru` logger
+### Middleware Stack
+1. `CsrfExemptMiddleware` - Disables CSRF
+2. `HandleErrorsMiddleware` - JSON error responses
+3. Standard Django middleware
 
-### Model Conventions
-- All models inherit from `BaseModel` for timestamp and soft delete functionality
-- Use Django's built-in User model with OneToOne profile extension
-- Signal-based automatic profile creation on user registration
-- Profile model contains user-specific data and preferences
+### Error Handling
+- Automatic JSON error conversion via middleware
+- Custom messages: 401 (Authentication required), 403 (Authorization required), 404 (Resource not found)
+- Loguru logging integration
+
+## Project Structure Overview
+
+```
+├── .github/
+│   └── copilot-instructions.md      # AI assistant coding guidelines and project documentation
+├── .vscode/
+│   ├── launch.json                  # VS Code debug configuration
+│   └── settings.json                # VS Code workspace settings
+├── apps/                            # Django applications directory (added to sys.path)
+│   └── common/                      # Main business logic application
+│       ├── admin/                   # Django admin customizations
+│       │   ├── PlatformAPI.py       # Admin interface for platform API tokens
+│       │   ├── Profile.py           # Admin interface for user profiles
+│       │   └── __init__.py          # Admin module initialization
+│       ├── controllers/             # Controller-based architecture (replaces views)
+│       │   ├── Authentication/      # Authentication-related controllers
+│       │   │   ├── LoginController.py      # Login endpoint and serializers
+│       │   │   └── RegistrationController.py # User registration logic
+│       │   ├── Common/              # Common/shared controllers
+│       │   │   └── ProfileController.py    # User profile management
+│       │   └── PlatformApi/         # Platform API controllers
+│       │       └── PlatformAPI.py   # Platform API token management
+│       ├── migrations/              # Database migration files
+│       │   ├── 0001_initial.py      # Initial database schema
+│       │   └── __init__.py          # Migration module initialization
+│       ├── models/                  # Django models
+│       │   ├── Base.py              # BaseModel with timestamps and soft delete
+│       │   ├── PlatformApi.py       # Platform API token model
+│       │   ├── Profile.py           # User profile model with signals
+│       │   └── __init__.py          # Model imports and initialization
+│       ├── routers/                 # Custom routing logic
+│       │   └── RouterEnvelop.py     # Secondary router for platform APIs
+│       ├── __init__.py              # App initialization
+│       ├── apps.py                  # Django app configuration
+│       ├── tests.py                 # Unit tests for the common app
+│       └── urls.py                  # Main URL routing with dual-router system
+├── core/                            # Django core configuration
+│   ├── helpers/                     # Core helper modules
+│   │   ├── Authentications/         # Custom authentication classes
+│   │   │   ├── PlatformApiToken.py  # X-API-KEY authentication handler
+│   │   │   └── __init__.py          # Authentication module initialization
+│   │   ├── HandlerLogGuru.py        # Loguru logging configuration
+│   │   ├── Middleware.py            # Custom middleware (CSRF exempt, error handling)
+│   │   └── __init__.py              # Helpers module initialization
+│   ├── __init__.py                  # Core module initialization
+│   ├── asgi.py                      # ASGI application configuration
+│   ├── log_handler.py               # Logging handler setup
+│   ├── schema.py                    # Custom Swagger/OpenAPI schema generator
+│   ├── settings.py                  # Django settings with environment configuration
+│   ├── urls.py                      # Main URL configuration with Swagger
+│   └── wsgi.py                      # WSGI application configuration
+├── db/                              # Database directory
+│   ├── .gitignore                   # Database gitignore rules
+│   └── db.sqlite3                   # SQLite database file (development)
+├── logs/                            # Application logs directory
+│   └── .gitignore                   # Logs gitignore rules
+├── media/                           # User uploaded media files
+│   └── .gitignore                   # Media gitignore rules
+├── pipeline/                        # Docker and infrastructure configuration
+│   ├── development/                 # Development environment configs
+│   │   └── database/
+│   │       └── compose.yml          # PostgreSQL development setup
+│   ├── .gitignore                   # Pipeline gitignore rules
+│   ├── pgadmin.yml                  # pgAdmin Docker configuration
+│   └── redis.yml                    # Redis Docker configuration
+├── static/                          # Static files (CSS, JS, images)
+│   └── .gitignore                   # Static files gitignore rules
+├── utils/                           # Shared utility functions (added to sys.path)
+│   ├── ApiModel.py                  # API response models and utilities
+│   └── Microfunctions.py            # Small utility functions (email validation, etc.)
+├── .venv/                           # Virtual environment directory
+│   ├── bin/
+│   │   └── python3                  # Python executable for the project
+│   ├── lib/                         # Installed packages and dependencies
+│   └── pyvenv.cfg                   # Virtual environment configuration
+├── .dockerignore                    # Docker build ignore rules
+├── .env -> .env.sample              # Environment variables symlink
+├── .env.sample                      # Environment variables template
+├── .gitignore                       # Git ignore rules
+├── .python-version                  # Python version specification
+├── Dockerfile                       # Docker container configuration
+├── Makefile                         # Development commands (run, migrate, format, lint)
+├── README.md                        # Project documentation
+├── TODO.md                          # Project todo list and roadmap
+├── compose.yml                      # Docker Compose configuration
+├── main.py                          # Alternative Django entry point
+├── manage.py                        # Django management commands
+├── pyproject.toml                   # Python project configuration and dependencies
+└── uv.lock                          # UV package manager lock file
+```
+
+## Development Guidelines
 
 When working on this codebase:
-1. Follow the controller pattern for new endpoints
-2. Add new routes to both main `urls.py` and appropriate router files
-3. Use the custom authentication classes for API endpoints
-4. Inherit from `BaseModel` for new models needing timestamps
-5. Use the existing middleware for consistent error handling
-6. Test with both JWT and X-API-KEY authentication methods
+
+### Controllers & Views
+- Follow controller pattern for new endpoints
+- Controllers contain both serializers and APIView classes
+- Use `@swagger_auto_schema` for API documentation
+- Email/username authentication supported in login
+
+### Models & Database
+- Inherit from `BaseModel` for timestamps and soft delete
+- User profiles auto-created via Django signals
+- Dual-router system: main + platform API routes
+
+### Authentication & Security
+- Support JWT, X-API-KEY, and session authentication
+- CSRF disabled globally via middleware
+- Custom error handling with JSON responses
+
+### Code Organization
+- Controllers in `apps/common/controllers/` by feature
+- Models in separate files with BaseModel inheritance
+- Utils available directly (added to sys.path)
+- API prefix: `api/v1/` for all endpoints
