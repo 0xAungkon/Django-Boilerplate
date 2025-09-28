@@ -2,7 +2,6 @@
 from .Base import *
 from .PlatformApi import *
 from .Profile import *
-from .Workspace import *
 from .Vault import *
 from .SSHCreds import *
 from .SSHServers import *

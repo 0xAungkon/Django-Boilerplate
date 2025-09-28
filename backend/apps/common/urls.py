@@ -3,7 +3,6 @@ from apps.common.controllers.PlatformApi.PlatformAPI import APITokenModelViewSet
 from .controllers.Authentication.LoginController import LoginAPIView
 from .controllers.Authentication.RegistrationController import RegisterAPIView
 from .controllers.Common.ProfileController import ProfileAPIView
-from .controllers.Common.WorkspaceController import WorkspaceViewSet
 from .controllers.Common.VaultController import VaultViewSet
 from .controllers.Common.SSHCredsController import SSHCredsViewSet
 from .controllers.Common.SSHServersController import SSHServersViewSet
@@ -13,18 +12,6 @@ urlpatterns = [
     path("auth/login", LoginAPIView.as_view(), name="login"),
     path("auth/register", RegisterAPIView.as_view(), name="registration"),
     path("common/profile", ProfileAPIView.as_view(), name="profile"),
-
-    # Workspace endpoints
-    path(
-        "workspaces/",
-        WorkspaceViewSet.as_view({"get": "list", "post": "create"}),
-        name="workspace-list",
-    ),
-    path(
-        "workspaces/<uuid:pk>/",
-        WorkspaceViewSet.as_view({"get": "retrieve", "patch": "partial_update", "delete": "destroy"}),
-        name="workspace-detail",
-    ),
 
     # Vault endpoints
     path(

@@ -8,7 +8,6 @@ from drf_yasg import openapi
 from rest_framework import serializers
 from django.utils import timezone
 from common.models.Vault import VaultModel
-from common.models.Workspace import WorkspaceModel
 
 
 # Serializer for vault information
@@ -16,16 +15,15 @@ class VaultSerializer(serializers.ModelSerializer):
     created_at = serializers.DateTimeField(read_only=True)
     updated_at = serializers.DateTimeField(read_only=True)
     user = serializers.CharField(source='user.username', read_only=True)
-    workspace_name = serializers.CharField(source='workspace.name', read_only=True)
     
     class Meta:
         model = VaultModel
         fields = [
-            'uid', 'device_uid', 'workspace', 'workspace_name', 'meta_data', 
+            'uid', 'device_uid', 'meta_data', 
             'os_hostname', 'os_user', 'os_base', 'vault_name', 'is_active', 
             'user', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['uid', 'user', 'workspace_name', 'created_at', 'updated_at']
+        read_only_fields = ['uid', 'user', 'created_at', 'updated_at']
 
 
 # Serializer for creating/updating vault
@@ -33,7 +31,7 @@ class VaultCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = VaultModel
         fields = [
-            'device_uid', 'workspace', 'meta_data', 'os_hostname', 
+            'device_uid', 'meta_data', 'os_hostname', 
             'os_user', 'os_base', 'vault_name', 'is_active'
         ]
         
@@ -51,14 +49,6 @@ class VaultCreateUpdateSerializer(serializers.ModelSerializer):
         if not value or not value.strip():
             raise serializers.ValidationError("OS user cannot be empty.")
         return value.strip()
-    
-    def validate_workspace(self, value):
-        # Ensure the workspace belongs to the current user
-        request = self.context.get('request')
-        if request and hasattr(request, 'user'):
-            if value.user != request.user:
-                raise serializers.ValidationError("You can only create vaults in your own workspaces.")
-        return value
 
 
 # ViewSet for vault CRUD operations
@@ -76,7 +66,7 @@ class VaultViewSet(viewsets.ModelViewSet):
         return VaultModel.objects.filter(
             user=self.request.user, 
             is_deleted=False
-        ).select_related('workspace', 'user').order_by('-created_at')
+        ).select_related('user').order_by('-created_at')
     
     @swagger_auto_schema(
         operation_description="List all vaults for the authenticated user",
